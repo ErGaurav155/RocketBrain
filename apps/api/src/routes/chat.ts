@@ -8,13 +8,19 @@ import { getExpert, getMessageCost } from "../data/experts.js";
 import type { AuthedRequest } from "../middleware/auth.js";
 
 export const chatRouter = Router();
+const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
 const requestSchema = z.object({
   message: z.string().trim().min(1).max(8000),
   mode: z.enum(["normal", "deep"]).default("normal")
 });
 
-const openai = env.OPENAI_API_KEY ? new OpenAI({ apiKey: env.OPENAI_API_KEY }) : null;
+const deepseek = env.DEEPSEEK_API_KEY
+  ? new OpenAI({
+      apiKey: env.DEEPSEEK_API_KEY,
+      baseURL: DEEPSEEK_BASE_URL
+    })
+  : null;
 
 chatRouter.post("/:expertId", async (req, res) => {
   const auth = (req as unknown as AuthedRequest).auth;
@@ -36,10 +42,10 @@ chatRouter.post("/:expertId", async (req, res) => {
   }
 
   try {
-    if (!openai) throw new Error("OPENAI_API_KEY is not configured");
+    if (!deepseek) throw new Error("DEEPSEEK_API_KEY is not configured");
 
-    const response = await openai.chat.completions.create({
-      model: parsed.data.mode === "deep" ? "gpt-4.1" : "gpt-4.1-mini",
+    const response = await deepseek.chat.completions.create({
+      model: parsed.data.mode === "deep" ? "deepseek-reasoner" : "deepseek-chat",
       messages: [
         { role: "system", content: expert.systemPrompt },
         {

@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { createClerkClient, verifyToken } from "@clerk/backend";
 import { env } from "../config/env.js";
-import { User } from "../models/User.js";
+import { upsertUserFromClerk } from "../services/users.js";
 
 export type AuthedRequest = Request & {
   auth: {
@@ -23,14 +23,19 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     const session = await verifyToken(token, { secretKey: env.CLERK_SECRET_KEY });
     const clerkId = String(session.sub);
     const clerkUser = await clerk.users.getUser(clerkId);
-    const email = clerkUser.emailAddresses[0]?.emailAddress || "";
-    const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
-
-    const user = await User.findOneAndUpdate(
-      { clerkId },
-      { $setOnInsert: { clerkId, email, name }, $set: { email, name } },
-      { new: true, upsert: true }
-    );
+    const user = await upsertUserFromClerk({
+      id: clerkId,
+      username: clerkUser.username,
+      first_name: clerkUser.firstName,
+      last_name: clerkUser.lastName,
+      primary_email_address_id: clerkUser.primaryEmailAddressId,
+      email_addresses: clerkUser.emailAddresses.map((email) => ({
+        id: email.id,
+        email_address: email.emailAddress
+      })),
+      banned: clerkUser.banned,
+      locked: clerkUser.locked
+    });
 
     if (user.disabled) return res.status(403).json({ error: "User disabled" });
 
@@ -38,7 +43,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       clerkId,
       userId: String(user._id),
       role: user.role,
-      email
+      email: user.email
     };
     next();
   } catch (error) {

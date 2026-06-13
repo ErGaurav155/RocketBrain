@@ -11,15 +11,25 @@ export const adminRouter = Router();
 adminRouter.get("/users", async (_req, res) => {
   const users = await User.find().sort({ createdAt: -1 }).limit(100).lean();
   const balances = await CouponBalance.find({ userId: { $in: users.map((user) => user._id) } }).lean();
-  res.json({ users, balances });
+  const balanceByUserId = new Map(balances.map((balance) => [String(balance.userId), balance]));
+
+  res.json({
+    users: users.map((user) => ({
+      ...user,
+      balance: balanceByUserId.get(String(user._id)) || null
+    }))
+  });
 });
 
 adminRouter.post("/users/:id/add-coupons", async (req, res) => {
   const parsed = z.object({ coupons: z.number().int().positive().max(10000) }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ error: "User not found" });
+
   const balance = await CouponBalance.findOneAndUpdate(
-    { userId: req.params.id },
+    { userId: user._id },
     { $inc: { balance: parsed.data.coupons, totalPurchased: parsed.data.coupons } },
     { new: true, upsert: true }
   );

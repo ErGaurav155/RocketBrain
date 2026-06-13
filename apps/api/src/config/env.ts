@@ -3,8 +3,9 @@ import { z } from "zod";
 
 const envSchema = z.object({
   CLERK_SECRET_KEY: z.string().optional(),
+  CLERK_WEBHOOK_SIGNING_SECRET: z.string().optional(),
+  DEEPSEEK_API_KEY: z.string().optional(),
   MONGODB_URI: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),

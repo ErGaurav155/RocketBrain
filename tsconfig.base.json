@@ -10,10 +10,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
-      "@rocketbrain/shared": ["packages/shared/src/index.ts"],
-      "@rocketbrain/ui": ["packages/ui/src/index.ts"]
+      "@rocketbrain/shared": ["./packages/shared/src/index.ts"],
+      "@rocketbrain/ui": ["./packages/ui/src/index.ts"]
     }
   }
 }
