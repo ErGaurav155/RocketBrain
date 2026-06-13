@@ -3,15 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "apps/*",
+    "apps/dashboard",
     "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=dashboard",
-    "dev:api": "npm run dev --workspace=api",
-    "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces",
-    "type-check": "npm run type-check --workspaces"
+    "build": "npm run build --workspace=dashboard",
+    "start": "npm run start --workspace=dashboard",
+    "lint": "npm run lint --workspace=dashboard",
+    "type-check": "npm run type-check --workspace=dashboard"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
